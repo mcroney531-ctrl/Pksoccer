@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Penalty Shootout: Soccer Rules Showdown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night: #0a121f;
+    --night-2: #111c30;
+    --floodlight: #ffe9b8;
+    --turf-deep: #1a4327;
+    --turf-mid: #266b38;
+    --turf-light: #2f8244;
+    --line: rgba(255,255,255,0.82);
+    --gold: #e3b23c;
+    --gold-deep: #9c7321;
+    --goal-white: #f4f4f0;
+    --make: #2f9e58;
+    --make-deep: #1f7a42;
+    --miss: #c43b3b;
+    --miss-deep: #99292c;
+    --card: #faf8f1;
+    --card-2: #f1ecdd;
+    --ink: #16241a;
+    --ink-soft: #45523f;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #000; overflow: hidden; }
+  body { font-family: 'Inter', sans-serif; }
+
+  .scale-wrap {
+    width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: #000;
+  }
+  .stage {
+    width: 1920px; height: 1080px;
+    position: relative;
+    transform-origin: center center;
+    overflow: hidden;
+    background: var(--night);
+    /* Pure-CSS scale-to-fit. This runs with zero JS, so it still works in
+       sandboxed/no-script preview WebViews (e.g. "Open with" content://
+       viewers) that may not execute the rescale() script below at all.
+       The JS version (if it runs) just overwrites this inline with the
+       same math, so there's no conflict either way. */
+    transform: scale(min(100vw / 1920, 100vh / 1080));
+  }
+
+  /* ============ PITCH / STADIUM BACKDROP ============ */
+  .pitch-bg { position: absolute; inset: 0; z-index: 0; }
+
+  .sky {
+    position: absolute; top: 0; left: 0; right: 0; height: 620px;
+    background: linear-gradient(180deg, var(--night) 0%, var(--night-2) 70%, var(--turf-deep) 100%);
+  }
+  .floodlight-glow {
+    position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
+    width: 1500px; height: 700px;
+    background: radial-gradient(ellipse at center, rgba(255,233,184,0.22) 0%, rgba(255,233,184,0.06) 45%, transparent 75%);
+    filter: blur(4px);
+  }
+  .crowd {
+    position: absolute; top: 60px; left: 0; right: 0; height: 90px;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 3px, transparent 3px 9px),
+      linear-gradient(180deg, #1a2438, #0e1726);
+    opacity: 0.9;
+  }
+  .floodlight {
+    position: absolute; top: 30px; width: 10px; height: 130px;
+    background: linear-gradient(180deg, #1c2333, #0a0d14);
+    border-radius: 2px;
+  }
+  .floodlight::after {
+    content: ''; position: absolute; top: -22px; left: -28px; width: 66px; height: 22px;
+    background: var(--floodlight); border-radius: 4px;
+    box-shadow: 0 0 40px 12px rgba(255,233,184,0.55);
+  }
+  .fl-1 { left: 120px; } .fl-2 { left: 1790px; }
+
+  .turf {
+    position: absolute; top: 600px; left: 0; right: 0; bottom: 0;
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.045) 0 110px, transparent 110px 220px),
+      linear-gradient(180deg, var(--turf-mid) 0%, var(--turf-light) 55%, var(--turf-deep) 100%);
+  }
+
+  .goal {
+    position: absolute; top: 230px; left: 50%; transform: translateX(-50%);
+    width: 760px; height: 380px; z-index: 2;
+  }
+  .goal-net {
+    position: absolute; inset: 10px 10px 0 10px; bottom: -6px;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.16) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.16) 0 1px, transparent 1px 28px);
+    background-color: rgba(8,12,20,0.55);
+  }
+  .goal-post {
+    position: absolute; top: 0; bottom: -8px; width: 16px;
+    background: linear-gradient(90deg, #d8d8d2, var(--goal-white), #c7c7c0);
+    box-shadow: 0 0 14px rgba(255,255,255,0.5);
+  }
+  .goal-post.left { left: -8px; } .goal-post.right { right: -8px; }
+  .goal-crossbar {
+    position: absolute; top: -8px; left: -8px; right: -8px; height: 16px;
+    background: linear-gradient(180deg, var(--goal-white), #c7c7c0);
+    box-shadow: 0 0 14px rgba(255,255,255,0.5);
+  }
+  .keeper {
+    position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+    width: 70px; height: 140px;
+  }
+  .keeper-body {
+    position: absolute; bottom: 0; left: 10px; width: 50px; height: 95px;
+    background: linear-gradient(180deg, #2a3550, #161e30);
+    border-radius: 14px 14px 6px 6px;
+  }
+  .keeper-head {
+    position: absolute; top: 0; left: 22px; width: 26px; height: 26px;
+    background: #d8a874; border-radius: 50%;
+  }
+
+  .pitch-lines { position: absolute; inset: 0; z-index: 1; }
+  .penalty-box {
+    position: absolute; top: 610px; left: 50%; transform: translateX(-50%);
+    width: 1180px; height: 0; border-top: 3px solid var(--line); opacity: 0.55;
+  }
+  .penalty-arc {
+    position: absolute; top: 595px; left: 50%; transform: translateX(-50%);
+    width: 420px; height: 210px;
+    border: 3px solid var(--line); border-radius: 0 0 420px 420px;
+    border-top: none; opacity: 0.5;
+  }
+  .penalty-spot {
+    position: absolute; top: 760px; left: 50%; transform: translateX(-50%);
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--line); opacity: 0.85;
+  }
+  .center-fade {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 320px;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.18));
+  }
+
+  /* ============ SCREENS ============ */
+  .screen { position: absolute; inset: 0; display: none; z-index: 5; }
+  .screen.active { display: block; }
+
+  .btn-primary {
+    font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 19px;
+    letter-spacing: 0.03em; text-transform: uppercase;
+    color: #2a1d05; background: linear-gradient(180deg, #f3cf73, var(--gold) 60%, var(--gold-deep));
+    border: none; border-radius: 8px; padding: 16px 38px; cursor: pointer;
+    box-shadow: 0 6px 0 var(--gold-deep), 0 10px 18px rgba(0,0,0,0.4);
+    transition: transform .08s ease;
+  }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-primary:active { transform: translateY(2px); box-shadow: 0 3px 0 var(--gold-deep); }
+
+  /* ---- START SCREEN ---- */
+  #screen-start.active { display: flex; align-items: center; justify-content: center; }
+  .start-card {
+    width: 760px; padding: 60px 64px; text-align: center;
+    background: rgba(10,16,26,0.72); border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 18px; backdrop-filter: blur(6px);
+    box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+  }
+  .eyebrow {
+    font-family: 'Oswald', sans-serif; font-size: 16px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 14px;
+  }
+  .start-card h1 {
+    font-family: 'Anton', sans-serif; font-size: 56px; color: #fff; margin: 0 0 22px;
+    text-transform: uppercase; letter-spacing: 0.01em; line-height: 1.05;
+  }
+  .intro-copy {
+    font-size: 18px; line-height: 1.6; color: #dfe3ea; margin: 0 0 32px;
+  }
+  .intro-copy b { color: var(--gold); }
+
+  /* ---- GAME SCREEN ---- */
+  .rules-btn {
+    position: absolute; top: 34px; right: 50px; z-index: 11;
+    font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 15px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    background: rgba(10,16,26,0.65); color: #f4f1e6; border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 8px; padding: 11px 20px; cursor: pointer;
+  }
+  .rules-btn:hover { background: rgba(10,16,26,0.85); }
+
+  .scoreboard {
+    position: absolute; top: 34px; left: 50px; right: 50px; z-index: 9;
+    display: flex; align-items: center; justify-content: center; gap: 50px;
+    pointer-events: none;
+  }
+  .score-row { display: flex; align-items: center; gap: 14px; }
+  .score-row.ai { flex-direction: row; }
+  .score-label {
+    font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 17px;
+    letter-spacing: 0.1em; color: #f4f1e6;
+  }
+  .score-num {
+    font-family: 'Anton', sans-serif; font-size: 34px; color: var(--gold); min-width: 38px; text-align: center;
+  }
+  .pips { display: flex; gap: 8px; }
+  .pip {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: #fff;
+    background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.35);
+  }
+  .pip.pending { font-size: 15px; }
+  .pip.make { background: var(--make); border-color: var(--make-deep); }
+  .pip.miss { background: var(--miss); border-color: var(--miss-deep); }
+  .round-indicator {
+    font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 16px;
+    letter-spacing: 0.06em; text-transform: uppercase; color: #cfd5e0;
+    background: rgba(10,16,26,0.6); border-radius: 999px; padding: 9px 20px;
+    border: 1px solid rgba(255,255,255,0.15); white-space: nowrap;
+  }
+
+  .kick-zone {
+    position: absolute; left: 0; right: 0; bottom: 60px; z-index: 9;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+
+  .question-card, .feedback-panel, .ai-kick-panel, .sd-banner, .kick-ready-panel {
+    width: 920px; background: var(--card); border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    padding: 38px 46px; display: none;
+  }
+  .question-card.active, .feedback-panel.active, .ai-kick-panel.active, .sd-banner.active, .kick-ready-panel.active { display: block; }
+
+  .kick-tag {
+    display: inline-block; font-family: 'Oswald', sans-serif; font-weight: 700;
+    font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #fff; background: var(--ink); border-radius: 999px; padding: 6px 16px;
+    margin-bottom: 18px;
+  }
+  .ai-kick-panel .kick-tag { background: #4a3a16; }
+
+  .question-text {
+    font-size: 23px; font-weight: 600; color: var(--ink); line-height: 1.4; margin-bottom: 26px;
+  }
+  .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .answer-btn {
+    font-family: 'Inter', sans-serif; font-size: 17px; font-weight: 500;
+    text-align: left; color: var(--ink); background: #fff;
+    border: 2px solid var(--card-2); border-radius: 10px; padding: 16px 20px;
+    cursor: pointer; transition: border-color .12s ease, background .12s ease;
+  }
+  .answer-btn:hover { border-color: var(--gold); background: #fffaf0; }
+  .answer-btn.selected { background: #fffaf0; border-color: var(--gold); }
+  .answer-btn.disabled { pointer-events: none; opacity: 0.65; }
+  .answer-btn.disabled.selected { opacity: 1; }
+
+  /* ---- KICK READY (swipe-to-kick) ---- */
+  .kick-ready-panel { text-align: center; }
+  .kick-instruction {
+    font-family: 'Oswald', sans-serif; font-size: 19px; letter-spacing: 0.02em;
+    color: var(--ink-soft);
+  }
+
+  .ball-wrap {
+    position: absolute; top: 715px; left: 50%; margin-left: -35px;
+    width: 70px; height: 70px; z-index: 8; display: none; touch-action: none;
+  }
+  .ball-wrap.active { display: block; }
+  .ball {
+    width: 70px; height: 70px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffffff, #dcdcd4 55%, #b6b6ab 100%);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4), inset 0 0 0 2px rgba(0,0,0,0.08);
+    display: flex; align-items: center; justify-content: center; font-size: 42px;
+    cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none;
+    transition: transform 0.5s cubic-bezier(.2,.7,.3,1), opacity 0.5s ease;
+    will-change: transform;
+  }
+  .ball.dragging { transition: none; cursor: grabbing; }
+
+  /* ---- VIDEO OVERLAY ---- */
+  .video-overlay {
+    position: absolute; inset: 0; z-index: 70; background: #000;
+    display: none; align-items: center; justify-content: center;
+  }
+  .video-overlay.active { display: flex; }
+  .video-overlay video {
+    width: 100%; height: 100%; object-fit: cover; background: #000;
+  }
+  .video-result-text {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    font-family: 'Anton', sans-serif; font-size: 130px; letter-spacing: 0.02em;
+    text-transform: uppercase; opacity: 0; pointer-events: none;
+    text-shadow: 0 8px 34px rgba(0,0,0,0.65);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .video-result-text.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .video-result-text.make { color: var(--gold); }
+  .video-result-text.miss { color: var(--miss); }
+  .unmute-btn {
+    position: absolute; bottom: 40px; right: 40px; z-index: 71; display: none;
+    font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 15px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    background: rgba(10,16,26,0.72); color: #f4f1e6; border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px; padding: 11px 18px; cursor: pointer;
+  }
+
+  .feedback-result {
+    font-family: 'Anton', sans-serif; font-size: 38px; text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .feedback-result.make { color: var(--make-deep); }
+  .feedback-result.miss { color: var(--miss-deep); }
+  .feedback-why { font-size: 17px; line-height: 1.55; color: var(--ink-soft); margin-bottom: 28px; }
+
+  .ai-kick-panel { text-align: center; }
+  .ai-kick-anim { font-size: 50px; margin: 10px 0 18px; animation: kickbounce 0.9s ease-in-out; }
+  @keyframes kickbounce {
+    0% { transform: translateY(0) scale(1); }
+    40% { transform: translateY(-70px) scale(1.15); }
+    100% { transform: translateY(-110px) scale(0.9); }
+  }
+  .ai-kick-result {
+    font-family: 'Anton', sans-serif; font-size: 32px; text-transform: uppercase;
+    min-height: 44px; margin-bottom: 22px;
+  }
+  .ai-kick-result.make { color: var(--make-deep); }
+  .ai-kick-result.miss { color: var(--miss-deep); }
+
+  .sd-banner { text-align: center; }
+  .sd-banner div:first-child {
+    font-family: 'Anton', sans-serif; font-size: 30px; text-transform: uppercase; color: var(--ink); margin-bottom: 10px;
+  }
+  .sd-banner p { font-size: 16px; color: var(--ink-soft); margin: 0 0 26px; }
+
+  /* ---- END SCREEN ---- */
+  #screen-end.active { display: flex; align-items: center; justify-content: center; }
+  .end-card {
+    width: 700px; padding: 56px 60px; text-align: center;
+    background: rgba(10,16,26,0.78); border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 18px; backdrop-filter: blur(6px);
+  }
+  .end-emoji { font-size: 60px; margin-bottom: 14px; }
+  .end-card h1 {
+    font-family: 'Anton', sans-serif; font-size: 46px; color: #fff; margin: 0 0 14px; text-transform: uppercase;
+  }
+  .end-card p { font-size: 18px; color: #dfe3ea; margin: 0 0 30px; line-height: 1.5; }
+
+  /* ---- RULES MODAL ---- */
+  .modal-overlay {
+    position: absolute; inset: 0; z-index: 80; display: none;
+    background: rgba(5,8,14,0.72);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-card {
+    width: 980px; max-height: 880px; overflow-y: auto;
+    background: var(--card); border-radius: 16px; padding: 46px 54px; position: relative;
+  }
+  .modal-card h2 {
+    font-family: 'Anton', sans-serif; font-size: 32px; color: var(--ink); margin: 0 0 24px; text-transform: uppercase;
+  }
+  .modal-close {
+    position: absolute; top: 24px; right: 28px; width: 38px; height: 38px;
+    border-radius: 50%; border: none; background: var(--card-2); color: var(--ink);
+    font-size: 18px; cursor: pointer;
+  }
+  .rule-item { padding: 16px 0; border-bottom: 1px solid var(--card-2); }
+  .rule-item:last-child { border-bottom: none; }
+  .rule-item .rule-q { font-weight: 700; color: var(--ink); margin-bottom: 6px; font-size: 16px; }
+  .rule-item .rule-a { color: var(--ink-soft); font-size: 15px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="scale-wrap">
+  <div class="stage" id="stage">
+
+    <div class="pitch-bg">
+      <div class="sky"></div>
+      <div class="floodlight-glow"></div>
+      <div class="crowd"></div>
+      <div class="floodlight fl-1"></div>
+      <div class="floodlight fl-2"></div>
+      <div class="turf"></div>
+      <div class="goal">
+        <div class="goal-net"></div>
+        <div class="goal-post left"></div>
+        <div class="goal-post right"></div>
+        <div class="goal-crossbar"></div>
+        <div class="keeper"><div class="keeper-head"></div><div class="keeper-body"></div></div>
+      </div>
+      <div class="pitch-lines">
+        <div class="penalty-box"></div>
+        <div class="penalty-arc"></div>
+        <div class="penalty-spot"></div>
+      </div>
+      <div class="center-fade"></div>
+    </div>
+
+    <!-- START -->
+    <div class="screen active" id="screen-start">
+      <div class="start-card">
+        <div class="eyebrow">Penalty Shootout</div>
+        <h1>Soccer Rules Showdown</h1>
+        <p class="intro-copy">
+          Penalty shootouts don't always go to 5 kicks. The moment a comeback becomes
+          <b>mathematically impossible</b>, it's over — even mid-round. Answer rules
+          questions to take your kicks. Miss, and you might not get another chance.
+        </p>
+        <button class="btn-primary" id="btn-start">Start Shootout</button>
+      </div>
+    </div>
+
+    <!-- GAME -->
+    <div class="screen" id="screen-game">
+      <button class="rules-btn" id="btn-rules">📋 Rules</button>
+      <div class="scoreboard">
+        <div class="score-row you">
+          <div class="score-label">YOU</div>
+          <div class="pips" id="pips-player"></div>
+          <div class="score-num" id="score-player">0</div>
+        </div>
+        <div class="round-indicator" id="round-indicator">Round 1 of 5</div>
+        <div class="score-row ai">
+          <div class="score-num" id="score-ai">0</div>
+          <div class="pips" id="pips-ai"></div>
+          <div class="score-label">AI</div>
+        </div>
+      </div>
+
+      <!-- Ball sits over the pitch, above the instruction card -->
+      <div class="ball-wrap" id="ball-wrap">
+        <div class="ball" id="ball">⚽</div>
+      </div>
+
+      <div class="kick-zone">
+        <div class="question-card" id="question-card">
+          <div class="kick-tag">Your Kick</div>
+          <div class="question-text" id="question-text"></div>
+          <div class="answers" id="answers"></div>
+        </div>
+
+        <div class="kick-ready-panel" id="kick-ready-panel">
+          <div class="kick-tag">Take Your Kick</div>
+          <div class="kick-instruction">Swipe the ball up toward the goal — or just tap it to strike.</div>
+        </div>
+
+        <div class="feedback-panel" id="feedback-panel">
+          <div class="feedback-result" id="feedback-result"></div>
+          <div class="feedback-why" id="feedback-why"></div>
+          <button class="btn-primary" id="btn-continue-1">Continue</button>
+        </div>
+
+        <div class="ai-kick-panel" id="ai-kick-panel">
+          <div class="kick-tag">AI's Kick</div>
+          <div class="ai-kick-anim" id="ai-kick-anim">⚽</div>
+          <div class="ai-kick-result" id="ai-kick-result"></div>
+          <button class="btn-primary" id="btn-continue-2" style="display:none;">Continue</button>
+        </div>
+
+        <div class="sd-banner" id="sd-banner">
+          <div>Sudden Death</div>
+          <p>Both sides have taken equal kicks and the score is tied. From here, one kick each — the moment one team leads after a round, it's over.</p>
+          <button class="btn-primary" id="btn-sd-continue">Continue</button>
+        </div>
+      </div>
+
+      <!-- VIDEO KICK OVERLAY -->
+      <div class="video-overlay" id="video-overlay">
+        <video id="kick-video" playsinline webkit-playsinline muted preload="auto"></video>
+        <div class="video-result-text" id="video-result-text"></div>
+        <button class="unmute-btn" id="unmute-btn">🔇 Tap to unmute</button>
+      </div>
+    </div>
+
+    <!-- END -->
+    <div class="screen" id="screen-end">
+      <div class="end-card">
+        <div class="end-emoji" id="end-emoji"></div>
+        <h1 id="end-title"></h1>
+        <p id="end-sub"></p>
+        <button class="btn-primary" id="btn-replay">Play Again</button>
+      </div>
+    </div>
+
+    <!-- RULES MODAL -->
+    <div class="modal-overlay" id="rules-modal">
+      <div class="modal-card">
+        <button class="modal-close" id="btn-close-rules">✕</button>
+        <h2>Rules Cheat Sheet</h2>
+        <div class="rules-list" id="rules-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ============ DATA ============ */
+var QUESTIONS = [
+  { q: "When the ball is played to an attacker, they're offside if they're nearer the goal line than:",
+    options: ["The ball only", "The 2nd-to-last opponent", "The goalkeeper only", "The halfway line"],
+    correct: 1,
+    why: "The 2nd-to-last opponent matters because that's almost always the last defender — the goalkeeper usually doesn't count toward the offside line." },
+  { q: "Which of these is NOT automatically a handball foul?",
+    options: ["Ball hits a player's hand reaching for balance", "Deliberate hand-to-ball contact", "Hand makes the body unnaturally bigger to block a shot", "Scoring a goal with the hand"],
+    correct: 0,
+    why: "Incidental contact (ball-to-hand, not hand-to-ball) isn't a foul — intent and unnatural body position are what referees are judging." },
+  { q: "How many yellow cards in one match lead to an automatic red?",
+    options: ["1", "2", "3", "No such rule"],
+    correct: 1,
+    why: "Two yellows in one match equal an automatic red — it's two separate cautions adding up, not one card escalating." },
+  { q: "How far is the penalty spot from the goal line?",
+    options: ["6 yards", "10 yards", "12 yards", "18 yards"],
+    correct: 2,
+    why: "12 yards (11 meters) has been the spot since the rule was introduced in 1891 — it's never changed." },
+  { q: "A goal kick is awarded when the ball goes out over the goal line, last touched by:",
+    options: ["The defending team", "The attacking team", "Either team", "The goalkeeper only"],
+    correct: 1,
+    why: "If the attacking team knocks it out over the goal line, the defense gets the restart — it rewards good defending, not bad attacking." },
+  { q: "An indirect free kick, unlike a direct one:",
+    options: ["Can also score directly", "Must touch another player before entering the goal", "Is only for the goalkeeper", "Can't be taken inside the box"],
+    correct: 1,
+    why: "It exists for fouls considered less severe — the extra-touch requirement makes it harder to score directly off them." },
+  { q: "A throw-in is awarded to the team that:",
+    options: ["Touched the ball last before it went out", "Did NOT touch it last", "Is closest to the ball", "Is losing"],
+    correct: 1,
+    why: "Whoever didn't touch it last gets it back — same logic as a goal kick, just from the sideline." },
+  { q: "In most modern competitions, how many substitutions is a team allowed in regulation play?",
+    options: ["3", "5", "7", "Unlimited"],
+    correct: 1,
+    why: "FIFA expanded this from 3 to 5 in 2020, originally as a player-welfare measure — it stuck around after." },
+  { q: "If a player accidentally puts the ball into their own net, it's recorded as:",
+    options: ["No goal, it's a redo", "A goal for the opposing team", "A goal that doesn't count toward either team", "Automatically disallowed"],
+    correct: 1,
+    why: "It's recorded as a goal for the opposing team, credited to the player who put it in their own net — refereed exactly like any other goal." },
+  { q: "VAR (Video Assistant Referee) is typically used to review all of these EXCEPT:",
+    options: ["Goals", "Penalty decisions", "Red cards", "Throw-ins"],
+    correct: 3,
+    why: "Throw-ins are too minor and too frequent to review — VAR is reserved for high-impact, game-changing calls." }
+];
+
+var AI_MAKE_RATE = 0.55;
+
+var VIDEO_POOLS = {
+  make: ['videos/make_1.mp4', 'videos/make_2.mp4', 'videos/make_3.mp4'],
+  miss: ['videos/miss_1.mp4', 'videos/miss_2.mp4', 'videos/miss_3.mp4']
+};
+
+/* ============ STATE ============ */
+var game = {
+  qOrder: [],
+  qPointer: 0,
+  phase: 'regulation', // 'regulation' | 'suddendeath'
+  round: 1,
+  playerScore: 0,
+  aiScore: 0,
+  playerKicks: 0, // taken this phase
+  aiKicks: 0,
+  playerResults: [], // 'make' | 'miss'
+  aiResults: [],
+  currentQuestion: null,
+  pendingCorrect: null, // locked in from the answer, revealed after the kick
+  kickLocked: false
+};
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function nextQuestion() {
+  if (game.qPointer >= game.qOrder.length) {
+    game.qOrder = shuffle(QUESTIONS.map(function(_, i) { return i; }));
+    game.qPointer = 0;
+  }
+  var idx = game.qOrder[game.qPointer];
+  game.qPointer++;
+  return QUESTIONS[idx];
+}
+
+/* ============ SCREEN HELPERS ============ */
+function showScreen(id) {
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+}
+function showPanel(id) {
+  var panels = ['question-card', 'kick-ready-panel', 'feedback-panel', 'ai-kick-panel', 'sd-banner'];
+  for (var i = 0; i < panels.length; i++) {
+    document.getElementById(panels[i]).classList.remove('active');
+  }
+  if (id) document.getElementById(id).classList.add('active');
+  document.getElementById('ball-wrap').classList.toggle('active', id === 'kick-ready-panel');
+}
+
+/* ============ RENDER ============ */
+function renderScoreboard() {
+  document.getElementById('score-player').textContent = game.playerScore;
+  document.getElementById('score-ai').textContent = game.aiScore;
+  renderPips('pips-player', game.playerResults, game.playerKicks);
+  renderPips('pips-ai', game.aiResults, game.aiKicks);
+
+  var label;
+  if (game.phase === 'regulation') {
+    label = 'Round ' + game.round + ' of 5';
+  } else {
+    label = 'Sudden Death — Round ' + game.round;
+  }
+  document.getElementById('round-indicator').textContent = label;
+}
+
+function renderPips(containerId, results, kicksTaken) {
+  var el = document.getElementById(containerId);
+  el.innerHTML = '';
+  var totalSlots = game.phase === 'regulation' ? 5 : Math.max(5, results.length + 1);
+  for (var i = 0; i < totalSlots; i++) {
+    var pip = document.createElement('div');
+    if (i < results.length) {
+      pip.className = 'pip ' + results[i];
+      pip.textContent = results[i] === 'make' ? '✓' : '✕';
+    } else {
+      pip.className = 'pip pending';
+      pip.textContent = '⚽';
+    }
+    el.appendChild(pip);
+  }
+}
+
+/* ============ DECISION LOGIC ============ */
+function isRegulationDecided() {
+  var pRemaining = 5 - game.playerKicks;
+  var aRemaining = 5 - game.aiKicks;
+  var pMax = game.playerScore + pRemaining;
+  var aMax = game.aiScore + aRemaining;
+  if (game.playerScore > aMax) return 'player';
+  if (game.aiScore > pMax) return 'ai';
+  return null;
+}
+
+/* ============ GAME FLOW ============ */
+function startGame() {
+  game.qOrder = shuffle(QUESTIONS.map(function(_, i) { return i; }));
+  game.qPointer = 0;
+  game.phase = 'regulation';
+  game.round = 1;
+  game.playerScore = 0;
+  game.aiScore = 0;
+  game.playerKicks = 0;
+  game.aiKicks = 0;
+  game.playerResults = [];
+  game.aiResults = [];
+  showScreen('screen-game');
+  renderScoreboard();
+  presentQuestion();
+}
+
+function presentQuestion() {
+  game.currentQuestion = nextQuestion();
+  document.getElementById('question-text').textContent = game.currentQuestion.q;
+  var answersEl = document.getElementById('answers');
+  answersEl.innerHTML = '';
+  game.currentQuestion.options.forEach(function(opt, i) {
+    var btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.textContent = opt;
+    btn.addEventListener('click', function() { selectAnswer(i, btn); });
+    answersEl.appendChild(btn);
+  });
+  showPanel('question-card');
+}
+
+function selectAnswer(idx, btnEl) {
+  var correctIdx = game.currentQuestion.correct;
+  var isCorrect = idx === correctIdx;
+  game.pendingCorrect = isCorrect;
+
+  var allBtns = document.querySelectorAll('#answers .answer-btn');
+  allBtns.forEach(function(b, i) {
+    b.classList.add('disabled');
+    if (i === idx) b.classList.add('selected');
+  });
+
+  // No make/miss reveal yet — that's locked in but only shown after the kick.
+  setTimeout(function() {
+    showPanel('kick-ready-panel');
+    resetBall();
+  }, 450);
+}
+
+/* ============ SWIPE-TO-KICK BALL ============ */
+var ballEl = document.getElementById('ball');
+var stageScale = 1;
+var pointerState = null;
+
+function resetBall() {
+  game.kickLocked = false;
+  ballEl.classList.remove('dragging');
+  ballEl.style.transition = 'none';
+  ballEl.style.transform = 'translate(0px, 0px) scale(1)';
+  ballEl.style.opacity = '1';
+  void ballEl.offsetWidth; // force reflow so the transition reset takes effect
+  ballEl.style.transition = '';
+}
+
+function onBallPointerDown(e) {
+  if (game.kickLocked) return;
+  e.preventDefault();
+  try { ballEl.setPointerCapture(e.pointerId); } catch (err) {}
+  pointerState = { id: e.pointerId, startX: e.clientX, startY: e.clientY };
+  ballEl.classList.add('dragging');
+  ballEl.addEventListener('pointermove', onBallPointerMove);
+  ballEl.addEventListener('pointerup', onBallPointerUp);
+  ballEl.addEventListener('pointercancel', onBallPointerUp);
+}
+
+function onBallPointerMove(e) {
+  if (!pointerState || e.pointerId !== pointerState.id) return;
+  var dx = (e.clientX - pointerState.startX) / stageScale;
+  var dy = (e.clientY - pointerState.startY) / stageScale;
+  ballEl.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1)';
+}
+
+function onBallPointerUp(e) {
+  if (!pointerState || e.pointerId !== pointerState.id) return;
+  var dxScreen = e.clientX - pointerState.startX;
+  ballEl.removeEventListener('pointermove', onBallPointerMove);
+  ballEl.removeEventListener('pointerup', onBallPointerUp);
+  ballEl.removeEventListener('pointercancel', onBallPointerUp);
+  pointerState = null;
+
+  // A tap (little/no movement) still counts as a kick. Direction is flavor
+  // only — it never affects whether the kick is a make or a miss.
+  var corner = 'center';
+  if (dxScreen > 35) corner = 'right';
+  else if (dxScreen < -35) corner = 'left';
+  triggerKick(corner);
+}
+
+ballEl.addEventListener('pointerdown', onBallPointerDown);
+
+var KICK_TARGETS = {
+  left: 'translate(-260px, -380px) scale(0.4)',
+  center: 'translate(0px, -420px) scale(0.4)',
+  right: 'translate(260px, -380px) scale(0.4)'
+};
+
+function triggerKick(corner) {
+  if (game.kickLocked) return;
+  game.kickLocked = true;
+  ballEl.classList.remove('dragging');
+  void ballEl.offsetWidth;
+  ballEl.style.transform = KICK_TARGETS[corner] || KICK_TARGETS.center;
+  ballEl.style.opacity = '0.85';
+  setTimeout(resolveKickOutcome, 520);
+}
+
+function resolveKickOutcome() {
+  var isCorrect = game.pendingCorrect;
+  game.playerKicks++;
+  game.playerResults.push(isCorrect ? 'make' : 'miss');
+  if (isCorrect) game.playerScore++;
+  renderScoreboard();
+
+  showPanel(null); // hide the kick-ready card + ball while the video/feedback take over
+  playKickVideo(isCorrect);
+}
+
+/* ============ VIDEO KICK MOMENT ============ */
+function playKickVideo(isCorrect) {
+  var pool = isCorrect ? VIDEO_POOLS.make : VIDEO_POOLS.miss;
+  var src = pool[Math.floor(Math.random() * pool.length)];
+  var overlay = document.getElementById('video-overlay');
+  var video = document.getElementById('kick-video');
+  var resultText = document.getElementById('video-result-text');
+  var unmuteBtn = document.getElementById('unmute-btn');
+
+  resultText.className = 'video-result-text';
+  resultText.textContent = '';
+  unmuteBtn.style.display = 'none';
+  overlay.classList.remove('active');
+  video.muted = true;
+
+  var proceeded = false;
+  var safetyTimer = setTimeout(proceed, 8000);
+
+  function cleanupVideo() {
+    video.oncanplay = null;
+    video.onerror = null;
+    video.onended = null;
+    video.ontimeupdate = null;
+    unmuteBtn.onclick = null;
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+  }
+
+  function proceed() {
+    if (proceeded) return;
+    proceeded = true;
+    clearTimeout(safetyTimer);
+    overlay.classList.remove('active');
+    cleanupVideo();
+    showFeedback(isCorrect);
+  }
+
+  function revealResultText() {
+    if (resultText.classList.contains('show')) return;
+    resultText.textContent = isCorrect ? 'GOAL!' : 'SAVED!';
+    resultText.className = 'video-result-text show ' + (isCorrect ? 'make' : 'miss');
+  }
+
+  video.onerror = function() { proceed(); };
+  video.oncanplay = function() {
+    overlay.classList.add('active');
+    unmuteBtn.style.display = 'inline-block';
+    var playPromise = video.play();
+    if (playPromise && playPromise.catch) playPromise.catch(proceed);
+  };
+  video.ontimeupdate = function() {
+    if (isFinite(video.duration) && video.duration - video.currentTime <= 1.5) {
+      revealResultText();
+    }
+  };
+  video.onended = function() {
+    revealResultText();
+    setTimeout(proceed, 900);
+  };
+  unmuteBtn.onclick = function() {
+    video.muted = false;
+    unmuteBtn.style.display = 'none';
+  };
+
+  try {
+    video.src = src;
+    video.load();
+  } catch (err) {
+    proceed();
+  }
+}
+
+function showFeedback(isCorrect) {
+  var resultEl = document.getElementById('feedback-result');
+  var whyEl = document.getElementById('feedback-why');
+  if (isCorrect) {
+    resultEl.textContent = 'GOAL!';
+    resultEl.className = 'feedback-result make';
+  } else {
+    resultEl.textContent = 'MISS!';
+    resultEl.className = 'feedback-result miss';
+  }
+  whyEl.textContent = game.currentQuestion.why;
+  showPanel('feedback-panel');
+}
+
+document.getElementById('btn-continue-1').addEventListener('click', function() {
+  if (game.phase === 'regulation') {
+    var decision = isRegulationDecided();
+    if (decision) { endGame(decision); return; }
+  }
+  runAiKick();
+});
+
+function runAiKick() {
+  showPanel('ai-kick-panel');
+  var animEl = document.getElementById('ai-kick-anim');
+  var resultEl = document.getElementById('ai-kick-result');
+  var contBtn = document.getElementById('btn-continue-2');
+  animEl.style.animation = 'none';
+  resultEl.textContent = '';
+  contBtn.style.display = 'none';
+  void animEl.offsetWidth;
+  animEl.style.animation = 'kickbounce 0.9s ease-in-out';
+
+  setTimeout(function() {
+    var madeIt = Math.random() < AI_MAKE_RATE;
+    game.aiKicks++;
+    game.aiResults.push(madeIt ? 'make' : 'miss');
+    if (madeIt) game.aiScore++;
+    renderScoreboard();
+
+    if (madeIt) {
+      resultEl.textContent = 'AI Scores!';
+      resultEl.className = 'ai-kick-result make';
+    } else {
+      resultEl.textContent = "AI's Shot Goes Wide!";
+      resultEl.className = 'ai-kick-result miss';
+    }
+    contBtn.style.display = 'inline-block';
+  }, 900);
+}
+
+document.getElementById('btn-continue-2').addEventListener('click', function() {
+  if (game.phase === 'regulation') {
+    var decision = isRegulationDecided();
+    if (decision) { endGame(decision); return; }
+
+    if (game.playerKicks >= 5 && game.aiKicks >= 5) {
+      if (game.playerScore === game.aiScore) {
+        game.phase = 'suddendeath';
+        game.round = 1;
+        renderScoreboard();
+        showPanel('sd-banner');
+        return;
+      } else {
+        endGame(game.playerScore > game.aiScore ? 'player' : 'ai');
+        return;
+      }
+    }
+    game.round++;
+    renderScoreboard();
+    presentQuestion();
+  } else {
+    // sudden death: compare the just-completed round
+    var pLast = game.playerResults[game.playerResults.length - 1];
+    var aLast = game.aiResults[game.aiResults.length - 1];
+    if (pLast !== aLast) {
+      endGame(pLast === 'make' ? 'player' : 'ai');
+      return;
+    }
+    game.round++;
+    renderScoreboard();
+    presentQuestion();
+  }
+});
+
+document.getElementById('btn-sd-continue').addEventListener('click', function() {
+  presentQuestion();
+});
+
+function endGame(winner) {
+  var emojiEl = document.getElementById('end-emoji');
+  var titleEl = document.getElementById('end-title');
+  var subEl = document.getElementById('end-sub');
+  var score = game.playerScore + '–' + game.aiScore;
+  var reasonWin, reasonLoss;
+  if (game.phase === 'suddendeath') {
+    reasonWin = 'Tied after regulation, then settled in sudden death — first lead after an equal-kicks round wins.';
+    reasonLoss = 'Tied after regulation, then settled in sudden death — first lead after an equal-kicks round wins.';
+  } else {
+    reasonWin = 'The comeback became mathematically impossible for the AI — that\'s how real shootouts end early too.';
+    reasonLoss = 'Your comeback became mathematically impossible — that\'s how real shootouts end early too.';
+  }
+  if (winner === 'player') {
+    emojiEl.textContent = '🏆';
+    titleEl.textContent = 'You Win the Shootout!';
+    subEl.textContent = 'Final score: ' + score + '. ' + reasonWin;
+  } else {
+    emojiEl.textContent = '😬';
+    titleEl.textContent = 'AI Wins the Shootout';
+    subEl.textContent = 'Final score: ' + score + '. ' + reasonLoss + ' Brush up with the Rules cheat sheet and take another shot.';
+  }
+  showScreen('screen-end');
+}
+
+document.getElementById('btn-start').addEventListener('click', startGame);
+document.getElementById('btn-replay').addEventListener('click', startGame);
+
+/* ============ RULES MODAL ============ */
+function buildRulesList() {
+  var el = document.getElementById('rules-list');
+  el.innerHTML = '';
+  QUESTIONS.forEach(function(item) {
+    var div = document.createElement('div');
+    div.className = 'rule-item';
+    var qDiv = document.createElement('div');
+    qDiv.className = 'rule-q';
+    qDiv.textContent = item.options[item.correct] + ' — ' + item.q;
+    var aDiv = document.createElement('div');
+    aDiv.className = 'rule-a';
+    aDiv.textContent = item.why;
+    div.appendChild(qDiv);
+    div.appendChild(aDiv);
+    el.appendChild(div);
+  });
+}
+buildRulesList();
+
+document.getElementById('btn-rules').addEventListener('click', function() {
+  document.getElementById('rules-modal').classList.add('active');
+});
+document.getElementById('btn-close-rules').addEventListener('click', function() {
+  document.getElementById('rules-modal').classList.remove('active');
+});
+
+/* ============ SCALE TO FIT ============ */
+function rescale() {
+  var stage = document.getElementById('stage');
+  // clientWidth/clientHeight on the root element is far more reliable than
+  // window.innerWidth/innerHeight inside content:// / in-app WebViews, which
+  // sometimes report stale or "overview mode" dimensions on first paint.
+  var vw = document.documentElement.clientWidth || window.innerWidth;
+  var vh = document.documentElement.clientHeight || window.innerHeight;
+  if (!vw || !vh) return; // bail out on a bad/zero reading rather than scale to 0
+  var scaleX = vw / 1920;
+  var scaleY = vh / 1080;
+  var scale = Math.min(scaleX, scaleY);
+  stage.style.transform = 'scale(' + scale + ')';
+  stageScale = scale;
+}
+
+window.addEventListener('resize', rescale);
+window.addEventListener('orientationchange', rescale);
+window.addEventListener('load', rescale);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', rescale);
+}
+// Some WebViews report correct dimensions only after a short settle delay
+// (font load, address-bar collapse, overview-mode correction). Re-check a
+// few times rather than trusting a single synchronous measurement.
+[0, 50, 150, 400, 1000].forEach(function(ms) { setTimeout(rescale, ms); });
+
+// Final fallback: if the layout ever changes size without firing a resize
+// event (some embedded viewers), keep it self-correcting.
+if (window.ResizeObserver) {
+  new ResizeObserver(rescale).observe(document.documentElement);
+}
+
+rescale();
+</script>
+</body>
+</html>
