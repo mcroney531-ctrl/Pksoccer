@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Penalty Shootout: Soccer Rules Showdown</title>
+<title>Soccer Showdown: Penalty Shootout</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -164,7 +164,16 @@
 
   /* ---- START SCREEN ---- */
   #screen-start.active { display: flex; align-items: center; justify-content: center; }
+  .start-cover {
+    position: absolute; inset: 0; z-index: 0;
+    background: url('images/cover.png') center 30% / cover no-repeat;
+  }
+  .start-cover::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(5,8,14,0.35) 0%, rgba(5,8,14,0.55) 55%, rgba(5,8,14,0.85) 100%);
+  }
   .start-card {
+    position: relative; z-index: 1;
     width: 760px; padding: 60px 64px; text-align: center;
     background: rgba(10,16,26,0.72); border: 1px solid rgba(255,255,255,0.14);
     border-radius: 18px; backdrop-filter: blur(6px);
@@ -405,9 +414,10 @@
 
     <!-- START -->
     <div class="screen active" id="screen-start">
+      <div class="start-cover"></div>
       <div class="start-card">
         <div class="eyebrow">Penalty Shootout</div>
-        <h1>Soccer Rules Showdown</h1>
+        <h1>Soccer Showdown</h1>
         <p class="intro-copy">
           Penalty shootouts don't always go to 5 kicks. The moment a comeback becomes
           <b>mathematically impossible</b>, it's over — even mid-round. Answer rules
