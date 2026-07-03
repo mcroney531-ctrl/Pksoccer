@@ -819,7 +819,12 @@ function resetBall() {
   ballEl.classList.remove('dragging');
   ballEl.style.transition = 'none';
   ballEl.style.transform = 'translate(0px, 0px) scale(1)';
-  ballEl.style.opacity = '1';
+  // The question-slide photos already show a ball sitting at the spot, so
+  // our synthetic ball stays invisible (but still fully tappable/draggable —
+  // only its opacity changes here) until the player actually touches it, to
+  // avoid two balls appearing to sit on the pitch at once. It fades in right
+  // as the kick begins, since the static photo can't show the ball in flight.
+  ballEl.style.opacity = '0';
   void ballEl.offsetWidth; // force reflow so the transition reset takes effect
   ballEl.style.transition = '';
 }
@@ -829,6 +834,7 @@ function onBallPointerDown(e) {
   e.preventDefault();
   try { ballWrapEl.setPointerCapture(e.pointerId); } catch (err) {}
   pointerState = { id: e.pointerId, startX: e.clientX, startY: e.clientY };
+  ballEl.style.opacity = '1';
   ballEl.classList.add('dragging');
   ballWrapEl.addEventListener('pointermove', onBallPointerMove);
   ballWrapEl.addEventListener('pointerup', onBallPointerUp);
