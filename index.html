@@ -287,10 +287,15 @@
   }
 
   .ball-wrap {
-    position: absolute; top: 715px; left: 50%; margin-left: -35px;
+    /* width/height are set dynamically in JS (see updateBallHitZoneSize) so the
+       tappable area stays finger-sized in real screen pixels no matter how
+       small the stage gets scaled down on a narrow phone viewport — the
+       70x70 ball graphic inside it stays visually the same size regardless. */
+    position: absolute; top: 750px; left: 50%; transform: translate(-50%, -50%);
     width: 70px; height: 70px; z-index: 8; display: none; touch-action: none;
+    align-items: center; justify-content: center;
   }
-  .ball-wrap.active { display: block; }
+  .ball-wrap.active { display: flex; }
   .ball {
     width: 70px; height: 70px; border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #ffffff, #dcdcd4 55%, #b6b6ab 100%);
@@ -791,11 +796,26 @@ function selectAnswer(idx, btnEl) {
 
 /* ============ SWIPE-TO-KICK BALL ============ */
 var ballEl = document.getElementById('ball');
+var ballWrapEl = document.getElementById('ball-wrap');
 var stageScale = 1;
 var pointerState = null;
 
+// The ball graphic is only 70x70 stage-px, which on a narrow phone viewport
+// (scale ~0.2) shrinks to a ~14 real-screen-px target — far too small to
+// reliably tap. ball-wrap is the actual hit-zone (the ball itself is purely
+// visual inside it), so we grow ball-wrap in stage-space to guarantee at
+// least this many real screen pixels no matter how small the stage scale is.
+var MIN_TAP_TARGET_PX = 56;
+
+function updateBallHitZoneSize() {
+  var stagePx = Math.max(70, MIN_TAP_TARGET_PX / stageScale);
+  ballWrapEl.style.width = stagePx + 'px';
+  ballWrapEl.style.height = stagePx + 'px';
+}
+
 function resetBall() {
   game.kickLocked = false;
+  updateBallHitZoneSize();
   ballEl.classList.remove('dragging');
   ballEl.style.transition = 'none';
   ballEl.style.transform = 'translate(0px, 0px) scale(1)';
@@ -807,12 +827,12 @@ function resetBall() {
 function onBallPointerDown(e) {
   if (game.kickLocked) return;
   e.preventDefault();
-  try { ballEl.setPointerCapture(e.pointerId); } catch (err) {}
+  try { ballWrapEl.setPointerCapture(e.pointerId); } catch (err) {}
   pointerState = { id: e.pointerId, startX: e.clientX, startY: e.clientY };
   ballEl.classList.add('dragging');
-  ballEl.addEventListener('pointermove', onBallPointerMove);
-  ballEl.addEventListener('pointerup', onBallPointerUp);
-  ballEl.addEventListener('pointercancel', onBallPointerUp);
+  ballWrapEl.addEventListener('pointermove', onBallPointerMove);
+  ballWrapEl.addEventListener('pointerup', onBallPointerUp);
+  ballWrapEl.addEventListener('pointercancel', onBallPointerUp);
 }
 
 function onBallPointerMove(e) {
@@ -825,9 +845,9 @@ function onBallPointerMove(e) {
 function onBallPointerUp(e) {
   if (!pointerState || e.pointerId !== pointerState.id) return;
   var dxScreen = e.clientX - pointerState.startX;
-  ballEl.removeEventListener('pointermove', onBallPointerMove);
-  ballEl.removeEventListener('pointerup', onBallPointerUp);
-  ballEl.removeEventListener('pointercancel', onBallPointerUp);
+  ballWrapEl.removeEventListener('pointermove', onBallPointerMove);
+  ballWrapEl.removeEventListener('pointerup', onBallPointerUp);
+  ballWrapEl.removeEventListener('pointercancel', onBallPointerUp);
   pointerState = null;
 
   // A tap (little/no movement) still counts as a kick. Direction is flavor
@@ -838,7 +858,7 @@ function onBallPointerUp(e) {
   triggerKick(corner);
 }
 
-ballEl.addEventListener('pointerdown', onBallPointerDown);
+ballWrapEl.addEventListener('pointerdown', onBallPointerDown);
 
 var KICK_TARGETS = {
   left: 'translate(-260px, -380px) scale(0.4)',
@@ -1132,6 +1152,7 @@ function rescale() {
   var scale = Math.min(scaleX, scaleY);
   stage.style.transform = 'scale(' + scale + ')';
   stageScale = scale;
+  updateBallHitZoneSize();
 }
 
 window.addEventListener('resize', rescale);
