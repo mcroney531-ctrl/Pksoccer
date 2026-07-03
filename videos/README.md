@@ -3,8 +3,8 @@
 Drop the kick-moment clips here using these exact filenames — `index.html`
 picks one at random from the matching pool for every kick:
 
-- `make_1.mp4`, `make_2.mp4`, `make_3.mp4` — goal clips
-- `miss_1.mp4`, `miss_2.mp4`, `miss_3.mp4` — save/miss clips
+- `make_1.mp4` through `make_5.mp4` — goal clips (all 5 in place)
+- `miss_1.mp4`, `miss_2.mp4`, `miss_3.mp4` — save/miss clips (still placeholders)
 
 Notes:
 
