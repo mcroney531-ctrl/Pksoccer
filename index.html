@@ -682,8 +682,6 @@ function showScreen(id) {
   for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
   document.getElementById(id).classList.add('active');
 }
-var PLAYER_BG_PANELS = ['question-card', 'kick-ready-panel', 'feedback-panel'];
-
 function showPanel(id) {
   var panels = ['question-card', 'kick-ready-panel', 'feedback-panel', 'ai-kick-panel', 'sd-banner', 'round-banner'];
   for (var i = 0; i < panels.length; i++) {
@@ -691,7 +689,10 @@ function showPanel(id) {
   }
   if (id) document.getElementById(id).classList.add('active');
   document.getElementById('ball-wrap').classList.toggle('active', id === 'kick-ready-panel');
-  document.getElementById('question-bg').classList.toggle('active', PLAYER_BG_PANELS.indexOf(id) !== -1);
+  // question-bg is intentionally never hidden once the game starts (see
+  // presentQuestion) — the fullscreen video/AI overlays fully cover it when
+  // they're up, and leaving it in place between panels avoids a flash of the
+  // old flat CSS pitch during every transition.
 }
 
 /* ============ RENDER ============ */
@@ -771,7 +772,9 @@ function presentQuestion() {
   });
 
   var bgImage = QUESTION_BG_IMAGES[game.playerKicks % QUESTION_BG_IMAGES.length];
-  document.getElementById('question-bg').style.backgroundImage = "url('" + bgImage + "')";
+  var bgEl = document.getElementById('question-bg');
+  bgEl.style.backgroundImage = "url('" + bgImage + "')";
+  bgEl.classList.add('active'); // stays on for the rest of the game — see showPanel
 
   showPanel('question-card');
 }
