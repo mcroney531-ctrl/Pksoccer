@@ -742,6 +742,23 @@ function isRegulationDecided() {
 }
 
 /* ============ GAME FLOW ============ */
+// Kick clips are 15-25MB each and only start downloading the instant a kick
+// is thrown — on a real (especially mobile) connection that can easily take
+// longer than the video's canplay safety window, which looks like a
+// "missing" clip since the game just silently falls back to the feedback
+// panel. Warming the browser's HTTP cache for all of them right when the
+// game starts (they're cached for a year — see netlify.toml) means most
+// kicks hit cache instead of the network by the time they're needed.
+var preloadedVideoUrls = {};
+function preloadAllVideos() {
+  var urls = VIDEO_POOLS.make.concat(VIDEO_POOLS.miss);
+  urls.forEach(function(url) {
+    if (preloadedVideoUrls[url]) return;
+    preloadedVideoUrls[url] = true;
+    fetch(url).catch(function() {}); // best-effort; playback still falls back gracefully if this fails
+  });
+}
+
 function startGame() {
   game.qOrder = shuffle(QUESTIONS.map(function(_, i) { return i; }));
   game.qPointer = 0;
@@ -755,6 +772,7 @@ function startGame() {
   game.aiResults = [];
   showScreen('screen-game');
   renderScoreboard();
+  preloadAllVideos();
   presentQuestion();
 }
 
@@ -906,7 +924,10 @@ function playKickVideo(isCorrect) {
   video.muted = true;
 
   var proceeded = false;
-  var safetyTimer = setTimeout(proceed, 8000);
+  // Generous — these clips are large and, if the preload in startGame()
+  // hasn't finished caching them yet, still need to download over whatever
+  // connection the player is on rather than falling back prematurely.
+  var safetyTimer = setTimeout(proceed, 20000);
 
   function cleanupVideo() {
     video.oncanplay = null;
