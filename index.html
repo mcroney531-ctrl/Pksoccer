@@ -194,6 +194,16 @@
   .intro-copy b { color: var(--gold); }
 
   /* ---- GAME SCREEN ---- */
+  .question-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background-position: center 20%; background-size: cover; background-repeat: no-repeat;
+    opacity: 0; transition: opacity 0.4s ease;
+  }
+  .question-bg.active { opacity: 1; }
+  .question-bg::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(5,8,14,0.25) 0%, rgba(5,8,14,0.45) 55%, rgba(5,8,14,0.88) 100%);
+  }
   .rules-btn {
     position: absolute; top: 34px; right: 50px; z-index: 11;
     font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 15px;
@@ -239,12 +249,12 @@
     display: flex; align-items: flex-end; justify-content: center;
   }
 
-  .question-card, .feedback-panel, .ai-kick-panel, .sd-banner, .kick-ready-panel {
+  .question-card, .feedback-panel, .ai-kick-panel, .sd-banner, .kick-ready-panel, .round-banner {
     width: 920px; background: var(--card); border-radius: 16px;
     box-shadow: 0 24px 60px rgba(0,0,0,0.45);
     padding: 38px 46px; display: none;
   }
-  .question-card.active, .feedback-panel.active, .ai-kick-panel.active, .sd-banner.active, .kick-ready-panel.active { display: block; }
+  .question-card.active, .feedback-panel.active, .ai-kick-panel.active, .sd-banner.active, .kick-ready-panel.active, .round-banner.active { display: block; }
 
   .kick-tag {
     display: inline-block; font-family: 'Oswald', sans-serif; font-weight: 700;
@@ -329,12 +339,6 @@
   .feedback-why { font-size: 17px; line-height: 1.55; color: var(--ink-soft); margin-bottom: 28px; }
 
   .ai-kick-panel { text-align: center; }
-  .ai-kick-anim { font-size: 50px; margin: 10px 0 18px; animation: kickbounce 0.9s ease-in-out; }
-  @keyframes kickbounce {
-    0% { transform: translateY(0) scale(1); }
-    40% { transform: translateY(-70px) scale(1.15); }
-    100% { transform: translateY(-110px) scale(0.9); }
-  }
   .ai-kick-result {
     font-family: 'Anton', sans-serif; font-size: 32px; text-transform: uppercase;
     min-height: 44px; margin-bottom: 22px;
@@ -342,11 +346,49 @@
   .ai-kick-result.make { color: var(--make-deep); }
   .ai-kick-result.miss { color: var(--miss-deep); }
 
-  .sd-banner { text-align: center; }
-  .sd-banner div:first-child {
+  /* ---- AI KICK DRAMATIC REVEAL ---- */
+  .ai-kick-overlay {
+    position: absolute; inset: 0; z-index: 70; display: none;
+    align-items: center; justify-content: center; overflow: hidden;
+  }
+  .ai-kick-overlay.active { display: flex; }
+  .ai-kick-photo {
+    position: absolute; inset: 0; background-size: cover; background-position: center;
+    transform: scale(1.06);
+  }
+  .ai-kick-photo::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(5,8,14,0.25) 0%, rgba(5,8,14,0.35) 60%, rgba(5,8,14,0.82) 100%);
+  }
+  .ai-kick-thinking {
+    position: absolute; left: 50%; bottom: 12%; transform: translateX(-50%);
+    font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 34px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: #fff;
+    text-shadow: 0 6px 24px rgba(0,0,0,0.6);
+    opacity: 0; transition: opacity 0.3s ease;
+  }
+  .ai-kick-thinking.show { opacity: 1; animation: thinkPulse 1.1s ease-in-out infinite; }
+  @keyframes thinkPulse {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+  }
+  .ai-kick-reveal {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    font-family: 'Anton', sans-serif; font-size: 130px; letter-spacing: 0.02em;
+    text-transform: uppercase; opacity: 0; pointer-events: none;
+    text-shadow: 0 8px 34px rgba(0,0,0,0.65);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .ai-kick-reveal.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .ai-kick-reveal.make { color: var(--gold); }
+  .ai-kick-reveal.miss { color: var(--miss); }
+
+  .sd-banner, .round-banner { text-align: center; }
+  .sd-banner div:first-child, .round-banner div:first-child {
     font-family: 'Anton', sans-serif; font-size: 30px; text-transform: uppercase; color: var(--ink); margin-bottom: 10px;
   }
-  .sd-banner p { font-size: 16px; color: var(--ink-soft); margin: 0 0 26px; }
+  .sd-banner p, .round-banner p { font-size: 16px; color: var(--ink-soft); margin: 0 0 26px; }
 
   /* ---- END SCREEN ---- */
   #screen-end.active { display: flex; align-items: center; justify-content: center; }
@@ -430,6 +472,7 @@
 
     <!-- GAME -->
     <div class="screen" id="screen-game">
+      <div class="question-bg" id="question-bg"></div>
       <button class="rules-btn" id="btn-rules">📋 Rules</button>
       <div class="scoreboard">
         <div class="score-row you">
@@ -437,7 +480,7 @@
           <div class="pips" id="pips-player"></div>
           <div class="score-num" id="score-player">0</div>
         </div>
-        <div class="round-indicator" id="round-indicator">Round 1 of 5</div>
+        <div class="round-indicator" id="round-indicator">Round 1 of 2 — Kick 1 of 5</div>
         <div class="score-row ai">
           <div class="score-num" id="score-ai">0</div>
           <div class="pips" id="pips-ai"></div>
@@ -470,7 +513,6 @@
 
         <div class="ai-kick-panel" id="ai-kick-panel">
           <div class="kick-tag">AI's Kick</div>
-          <div class="ai-kick-anim" id="ai-kick-anim">⚽</div>
           <div class="ai-kick-result" id="ai-kick-result"></div>
           <button class="btn-primary" id="btn-continue-2" style="display:none;">Continue</button>
         </div>
@@ -480,6 +522,12 @@
           <p>Both sides have taken equal kicks and the score is tied. From here, one kick each — the moment one team leads after a round, it's over.</p>
           <button class="btn-primary" id="btn-sd-continue">Continue</button>
         </div>
+
+        <div class="round-banner" id="round-banner">
+          <div>Round 2</div>
+          <p id="round-banner-text">Round 1 is in the books. Five more kicks each — miss too much ground and it can still end before kick 10.</p>
+          <button class="btn-primary" id="btn-round-continue">Continue</button>
+        </div>
       </div>
 
       <!-- VIDEO KICK OVERLAY -->
@@ -487,6 +535,13 @@
         <video id="kick-video" playsinline webkit-playsinline muted preload="auto"></video>
         <div class="video-result-text" id="video-result-text"></div>
         <button class="unmute-btn" id="unmute-btn">🔇 Tap to unmute</button>
+      </div>
+
+      <!-- AI KICK DRAMATIC REVEAL -->
+      <div class="ai-kick-overlay" id="ai-kick-overlay">
+        <div class="ai-kick-photo" id="ai-kick-photo"></div>
+        <div class="ai-kick-thinking" id="ai-kick-thinking">AI is answering&hellip;</div>
+        <div class="ai-kick-reveal" id="ai-kick-reveal"></div>
       </div>
     </div>
 
@@ -564,6 +619,22 @@ var VIDEO_POOLS = {
   miss: ['videos/miss_1.mp4', 'videos/miss_2.mp4', 'videos/miss_3.mp4']
 };
 
+var KICKS_PER_ROUND = 5;
+var REGULATION_ROUNDS = 2;
+var REGULATION_KICKS = KICKS_PER_ROUND * REGULATION_ROUNDS;
+
+// Cycled by kick number so the backdrop varies kick to kick, independent of
+// which question text gets drawn.
+var QUESTION_BG_IMAGES = [
+  'images/question_1.png', 'images/question_2.png', 'images/question_3.png',
+  'images/question_4.png', 'images/question_5.png', 'images/question_6.png'
+];
+
+var AI_KICK_IMAGES = [
+  'images/ai_kick_1.png', 'images/ai_kick_2.png', 'images/ai_kick_3.png',
+  'images/ai_kick_4.png', 'images/ai_kick_5.png'
+];
+
 /* ============ STATE ============ */
 var game = {
   qOrder: [],
@@ -606,13 +677,16 @@ function showScreen(id) {
   for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
   document.getElementById(id).classList.add('active');
 }
+var PLAYER_BG_PANELS = ['question-card', 'kick-ready-panel', 'feedback-panel'];
+
 function showPanel(id) {
-  var panels = ['question-card', 'kick-ready-panel', 'feedback-panel', 'ai-kick-panel', 'sd-banner'];
+  var panels = ['question-card', 'kick-ready-panel', 'feedback-panel', 'ai-kick-panel', 'sd-banner', 'round-banner'];
   for (var i = 0; i < panels.length; i++) {
     document.getElementById(panels[i]).classList.remove('active');
   }
   if (id) document.getElementById(id).classList.add('active');
   document.getElementById('ball-wrap').classList.toggle('active', id === 'kick-ready-panel');
+  document.getElementById('question-bg').classList.toggle('active', PLAYER_BG_PANELS.indexOf(id) !== -1);
 }
 
 /* ============ RENDER ============ */
@@ -624,7 +698,9 @@ function renderScoreboard() {
 
   var label;
   if (game.phase === 'regulation') {
-    label = 'Round ' + game.round + ' of 5';
+    var roundNum = Math.min(REGULATION_ROUNDS, Math.floor(game.playerKicks / KICKS_PER_ROUND) + 1);
+    var kickInRound = (game.playerKicks % KICKS_PER_ROUND) + 1;
+    label = 'Round ' + roundNum + ' of ' + REGULATION_ROUNDS + ' — Kick ' + kickInRound + ' of ' + KICKS_PER_ROUND;
   } else {
     label = 'Sudden Death — Round ' + game.round;
   }
@@ -634,7 +710,7 @@ function renderScoreboard() {
 function renderPips(containerId, results, kicksTaken) {
   var el = document.getElementById(containerId);
   el.innerHTML = '';
-  var totalSlots = game.phase === 'regulation' ? 5 : Math.max(5, results.length + 1);
+  var totalSlots = game.phase === 'regulation' ? REGULATION_KICKS : Math.max(5, results.length + 1);
   for (var i = 0; i < totalSlots; i++) {
     var pip = document.createElement('div');
     if (i < results.length) {
@@ -650,8 +726,8 @@ function renderPips(containerId, results, kicksTaken) {
 
 /* ============ DECISION LOGIC ============ */
 function isRegulationDecided() {
-  var pRemaining = 5 - game.playerKicks;
-  var aRemaining = 5 - game.aiKicks;
+  var pRemaining = REGULATION_KICKS - game.playerKicks;
+  var aRemaining = REGULATION_KICKS - game.aiKicks;
   var pMax = game.playerScore + pRemaining;
   var aMax = game.aiScore + aRemaining;
   if (game.playerScore > aMax) return 'player';
@@ -688,6 +764,10 @@ function presentQuestion() {
     btn.addEventListener('click', function() { selectAnswer(i, btn); });
     answersEl.appendChild(btn);
   });
+
+  var bgImage = QUESTION_BG_IMAGES[game.playerKicks % QUESTION_BG_IMAGES.length];
+  document.getElementById('question-bg').style.backgroundImage = "url('" + bgImage + "')";
+
   showPanel('question-card');
 }
 
@@ -883,16 +963,25 @@ document.getElementById('btn-continue-1').addEventListener('click', function() {
 });
 
 function runAiKick() {
-  showPanel('ai-kick-panel');
-  var animEl = document.getElementById('ai-kick-anim');
+  showPanel(null);
+  var overlay = document.getElementById('ai-kick-overlay');
+  var photoEl = document.getElementById('ai-kick-photo');
+  var thinkingEl = document.getElementById('ai-kick-thinking');
+  var revealEl = document.getElementById('ai-kick-reveal');
   var resultEl = document.getElementById('ai-kick-result');
   var contBtn = document.getElementById('btn-continue-2');
-  animEl.style.animation = 'none';
-  resultEl.textContent = '';
-  contBtn.style.display = 'none';
-  void animEl.offsetWidth;
-  animEl.style.animation = 'kickbounce 0.9s ease-in-out';
 
+  var pic = AI_KICK_IMAGES[Math.floor(Math.random() * AI_KICK_IMAGES.length)];
+  photoEl.style.backgroundImage = "url('" + pic + "')";
+  revealEl.className = 'ai-kick-reveal';
+  revealEl.textContent = '';
+  thinkingEl.classList.remove('show');
+  contBtn.style.display = 'none';
+  overlay.classList.add('active');
+  void thinkingEl.offsetWidth;
+  thinkingEl.classList.add('show');
+
+  var thinkMs = 3000 + Math.random() * 2000; // 3-5s of suspense before the reveal
   setTimeout(function() {
     var madeIt = Math.random() < AI_MAKE_RATE;
     game.aiKicks++;
@@ -900,15 +989,23 @@ function runAiKick() {
     if (madeIt) game.aiScore++;
     renderScoreboard();
 
-    if (madeIt) {
-      resultEl.textContent = 'AI Scores!';
-      resultEl.className = 'ai-kick-result make';
-    } else {
-      resultEl.textContent = "AI's Shot Goes Wide!";
-      resultEl.className = 'ai-kick-result miss';
-    }
-    contBtn.style.display = 'inline-block';
-  }, 900);
+    thinkingEl.classList.remove('show');
+    revealEl.textContent = madeIt ? 'GOAL!' : 'SAVED!';
+    revealEl.className = 'ai-kick-reveal show ' + (madeIt ? 'make' : 'miss');
+
+    setTimeout(function() {
+      overlay.classList.remove('active');
+      if (madeIt) {
+        resultEl.textContent = 'AI Scores!';
+        resultEl.className = 'ai-kick-result make';
+      } else {
+        resultEl.textContent = "AI's Shot Goes Wide!";
+        resultEl.className = 'ai-kick-result miss';
+      }
+      showPanel('ai-kick-panel');
+      contBtn.style.display = 'inline-block';
+    }, 1300);
+  }, thinkMs);
 }
 
 document.getElementById('btn-continue-2').addEventListener('click', function() {
@@ -916,7 +1013,7 @@ document.getElementById('btn-continue-2').addEventListener('click', function() {
     var decision = isRegulationDecided();
     if (decision) { endGame(decision); return; }
 
-    if (game.playerKicks >= 5 && game.aiKicks >= 5) {
+    if (game.playerKicks >= REGULATION_KICKS && game.aiKicks >= REGULATION_KICKS) {
       if (game.playerScore === game.aiScore) {
         game.phase = 'suddendeath';
         game.round = 1;
@@ -928,7 +1025,20 @@ document.getElementById('btn-continue-2').addEventListener('click', function() {
         return;
       }
     }
-    game.round++;
+
+    // Just finished a round boundary (e.g. kick 5 of 10) with the game still
+    // live — mark it with a banner before diving into the next round.
+    if (game.playerKicks % KICKS_PER_ROUND === 0 && game.playerKicks === game.aiKicks) {
+      var justFinishedRound = game.playerKicks / KICKS_PER_ROUND;
+      document.getElementById('round-banner').querySelector('div:first-child').textContent =
+        'Round ' + (justFinishedRound + 1);
+      document.getElementById('round-banner-text').textContent =
+        'Round ' + justFinishedRound + ' is in the books, ' + game.playerScore + '–' + game.aiScore + '. ' +
+        (REGULATION_KICKS - game.playerKicks) + ' kicks each remain — miss too much ground and it can still end early.';
+      showPanel('round-banner');
+      return;
+    }
+
     renderScoreboard();
     presentQuestion();
   } else {
@@ -946,6 +1056,10 @@ document.getElementById('btn-continue-2').addEventListener('click', function() {
 });
 
 document.getElementById('btn-sd-continue').addEventListener('click', function() {
+  presentQuestion();
+});
+
+document.getElementById('btn-round-continue').addEventListener('click', function() {
   presentQuestion();
 });
 
